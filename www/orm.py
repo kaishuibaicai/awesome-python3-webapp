@@ -228,15 +228,20 @@ class Model(dict, mataclass=ModelMetaclass):
 async def findAll(cls, where=None, args=None, **kw):
 	' find objects by where clause. '
 	sql = [cls.__select__]
+
+	# 定义的默认的select语句是通过主键查询的，并不包括where子句
+	# 因此若指定有where,需要在select语句中追加关键字
 	if where:
 		sql.append('where')
 		sql.append(where)
 	if args is None:
 		args = []
 	orderBy = kw.get('orderBy', None)
+	# 解释同where,此处orderBy通过关键字参数传入
 	if orderBy:
 		sql.append('order by')
 		sql.append(orderBy)
+	# 解释同where
 	limit = kw.get('limit', None)
 	if limit is not None:
 		sql.append('limit')
@@ -248,7 +253,7 @@ async def findAll(cls, where=None, args=None, **kw):
 			args.extend(limit)
 		else:
 			raise ValueError('Invalid limit value: %s' % str(limit))
-	rs = await select(' '.join(sql), args)
+	rs = await select(' '.join(sql), args)     # 没有指定size,因此回fetchall
 	return [cls(**r) for r in rs]
 
 
@@ -277,14 +282,16 @@ async def find(cls, pk):
 
 
 async def save(self):
+	# 在定义__insert__时，将主键放在了末尾，因此属性与值要意义对应，因此通过append的方式将主键加在最后
 	args = list(map(self.getValueOrDefault, self.__fields__))
 	args.append(self.getValueOrDefault(self.__primary_key__))
 	rows = await execute(self.__insert__, args)
-	if rows != 1:
+	if rows != 1:    # 插入一条日志记录，结果影响的条数不等于１，肯定出错了
 		logging.warn('failed to insert record: affected rows: %s' % rows)
 
 
 async def update(self):
+	# 像time.time, next_id之类的函数在插入的时候已经调用过了，没有其它需要实时更新的值，因此调用getValue
 	args = list(map(self.getValue, self.__fields__))
 	args.append(self.getValue(self.__pramary_key__))
 	rows = await execute(self.__update__, args)
@@ -293,7 +300,7 @@ async def update(self):
 
 
 async def remove(self):
-	args = [self.getValue(self.__primary_key__)]
-	rows = await execute(self.__delete__, args)
+	args = [self.getValue(self.__primary_key__)]    # 取消主键作为参数
+	rows = await execute(self.__delete__, args)     # 调用默认的delete语句
 	if rows != 1:
 		logging.warn('failed to remove by primary key: affected rows: %s' % rows)
