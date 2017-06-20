@@ -79,7 +79,7 @@ def get_named_kw_args(fn):
 # 判断函数fn是否带有命名关键字参数
 def has_named_kw_args(fn):
     params = inspect.signature(fn).parameters
-    for name, param in param.items():
+    for name, param in params.items():
         if param.kind == inspect.Parameter.KEYWORD_ONLY:
             return True
 
@@ -120,7 +120,7 @@ class RequestHandler(object):
         # 以下即为上面定义的一些判断函数与获取函数
         self._has_request_arg = has_request_arg(fn)
         self._has_var_kw_arg = has_var_kw_arg(fn)
-        self._has_name_kw_args = has_named_kw_args(fn)
+        self._has_named_kw_args = has_named_kw_args(fn)
         self._named_kw_args = get_named_kw_args(fn)
         self._required_kw_args = get_required_kw_args(fn)
 
@@ -207,7 +207,7 @@ def add_static(app):
     # os.path.dirname(), 去掉文件名，返回目录路径
     # os.path.join(), 将分离的各部分组合成一个路径名
     path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static')
-    app.route.add_static('/static/', path)
+    app.router.add_static('/static/', path)
     logging.info('add static %s => %s' % ('/static/', path))
 
 
