@@ -5,7 +5,7 @@
 
 __author__ = 'kaishuibaicai'
 
-config = {
+configs = {
     "db":{     # 重载的数据库信息，将会覆盖默认的数据库相关配置信息
         "host": "127.0.0.1"
     }
